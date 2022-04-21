@@ -3,3 +3,6 @@ workspace.code-workspace
 metadata/*.json
 images/*.png
 .ipynb_checkpoints/
+trait-layers/
+trait-layers.zip
+config.json
