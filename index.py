@@ -10,10 +10,14 @@ os.system('cls' if os.name == 'nt' else 'clear')
 def create_new_image(all_images, config):
     new_image = {}
 
+    # Random Genders
+    gender = random.choices(["M", "F"], [70, 30])[0]
+
     # Random NFT image traits
     # new_image["Background"] = "Blue Demon"
     for layer in config["layers"]:
-        trait = random.choices(layer["values"], layer["weights"])[0]
+        weight = layer["m_weights"] if gender == "M" else layer["f_weights"]
+        trait = random.choices(layer["values"], weight)[0]
         new_image[layer["name"]] = trait
 
     # Check image incompatibility config
@@ -138,7 +142,7 @@ def generate_unique_images(amount, config):
 with open('config.json') as json_file:
     config = json.load(json_file)
 
-generate_unique_images(100, config)
+generate_unique_images(2500, config)
 
 # Additional layer objects can be added following the above formats. They will automatically be composed along with the rest of the layers as long as they are the same size as eachother.
 # Objects are layered starting from 0 and increasing, meaning the front layer will be the last object. (Branding)
