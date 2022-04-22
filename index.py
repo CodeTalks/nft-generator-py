@@ -21,12 +21,14 @@ def create_new_image(all_images, config):
         new_image[layer["name"]] = trait
 
     # Check image incompatibility config
-    for incomp in config["incompatibilities"]:
-        if (new_image[incomp["layer"]] in incomp["values"]):
-            common_keys = new_image.keys() & incomp["incompatible_with"].keys()
+    for incompatible in config["incompatibilities"]:
+        if (new_image[incompatible["layer"]] in incompatible["values"]):
+            common_keys = new_image.keys(
+            ) & incompatible["incompatible_with"].keys()
             if len(common_keys) > 0:
                 for key in common_keys:
-                    if new_image[key] in incomp["incompatible_with"][key]:
+                    if new_image[key] in \
+                            incompatible["incompatible_with"][key]:
                         return create_new_image(all_images, config)
 
     if new_image in all_images:
@@ -68,37 +70,51 @@ def generate_unique_images(amount, config):
                 attributes.append({"trait_type": key, "value": token[key]})
 
         token_metadata = {
-            "image": config["baseURI"] + "/images/" + str(token["tokenId"]) + '.png',
+            "image": (
+                config["baseURI"]
+                + "/images/"
+                + str(token["tokenId"])
+                + '.png'
+            ),
             "tokenId": token["tokenId"],
-            "name":  config["name"] + " " + str(token["tokenId"]).zfill(pad_amount),
+            "name":  (
+                config["name"]
+                + " "
+                + str(token["tokenId"])
+            ).zfill(pad_amount),
             "description": config["description"],
             "attributes": attributes
         }
-        with open('./metadata/' + str(token["tokenId"]) + '.json', 'w') as outfile:
+        with open(
+            './metadata/' + str(token["tokenId"]) + '.json',
+            'w'
+        ) as outfile:
             json.dump(token_metadata, outfile, indent=4)
 
     # Dump all NFTs meta data json file
     with open('./metadata/all-objects.json', 'w') as outfile:
-        all_images_nonil = []
+        all_images_nonnil = []
         for image in all_images:
-            all_images_nonil.append({key: value for (key, value)
+            all_images_nonnil.append({key: value for (key, value)
                                      in image.items() if value != "NIL"})
-        json.dump(all_images_nonil, outfile, indent=4)
+        json.dump(all_images_nonnil, outfile, indent=4)
 
     # Generate NFT images
     for item in all_images:
+        print(f'Generating Token ID: {item["tokenId"]}')
+
         # remove the NIL value attr
-        item_nonil = {key: value for (
+        item_nonnil = {key: value for (
             key, value) in item.items() if value != "NIL"}
 
         layers = []
-        for index, attr in enumerate(item_nonil):
+        for index, attr in enumerate(item_nonnil):
             if attr != "tokenId":
                 layers.append([])
                 layer_config = [e for e in config["layers"]
                                 if e['name'] == attr][0]
                 path = layer_config["trait_path"]
-                image_file = trait_files[attr][item_nonil[attr]]
+                image_file = trait_files[attr][item_nonnil[attr]]
                 layers[index] = Image.open(
                     f'{path}/{image_file}.png').convert('RGBA')
 
@@ -123,7 +139,8 @@ def generate_unique_images(amount, config):
             rgb_im.save("./images/" + file_name)
 
     # v1.0.2 addition
-    print("\nUnique NFT's generated. After uploading images to IPFS, please paste the CID below.\nYou may hit ENTER or CTRL+C to quit.")
+    print("\nUnique NFT's generated. After uploading images to IPFS,"
+          " please paste the CID below.\nYou may hit ENTER or CTRL+C to quit.")
     cid = []  # input("IPFS Image CID (): ")
     if len(cid) > 0:
         if not cid.startswith("ipfs://"):
@@ -131,18 +148,27 @@ def generate_unique_images(amount, config):
         if cid.endswith("/"):
             cid = cid[:-1]
         for i, item in enumerate(all_images):
-            with open('./metadata/' + str(item["tokenId"]) + '.json', 'r') as infile:
-                original_json = json.loads(infile.read())
+            with open(
+                './metadata/' + str(item["tokenId"]) + '.json',
+                'r'
+            ) as in_file:
+                original_json = json.loads(in_file.read())
                 original_json["image"] = original_json["image"].replace(
                     config["baseURI"]+"/", cid+"/")
-                with open('./metadata/' + str(item["tokenId"]) + '.json', 'w') as outfile:
+                with open(
+                    './metadata/' + str(item["tokenId"]) + '.json',
+                    'w'
+                ) as outfile:
                     json.dump(original_json, outfile, indent=4)
 
 
 with open('config.json') as json_file:
     config = json.load(json_file)
 
-generate_unique_images(2500, config)
+generate_unique_images(10, config)
 
-# Additional layer objects can be added following the above formats. They will automatically be composed along with the rest of the layers as long as they are the same size as eachother.
-# Objects are layered starting from 0 and increasing, meaning the front layer will be the last object. (Branding)
+# Additional layer objects can be added following the above formats.
+# They will automatically be composed along with the rest of the
+# layers as long as they are the same size as eachother.
+# Objects are layered starting from 0 and increasing, meaning the
+# front layer will be the last object. (Branding)
